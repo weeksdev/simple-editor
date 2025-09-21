@@ -236,19 +236,15 @@ class TextEditorWidget(QTextEdit):
         Args:
             event: Key press event from Qt framework
         """
-        # Handle paste with formatting stripped (both Ctrl+V and Cmd+V)
-        if (event.key() == Qt.Key.Key_V and 
-            (event.modifiers() & Qt.KeyboardModifier.ControlModifier or
-             event.modifiers() & Qt.KeyboardModifier.MetaModifier)):
-            self.paste_plain_text()
-            return
+        # Let the default paste behavior work, but insertFromMimeData will strip formatting
+        # This ensures Cmd+V and Ctrl+V work normally but always strip formatting
         
         # Handle middle mouse button paste
         if event.key() == Qt.Key.Key_Insert and event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
             self.paste_plain_text()
             return
         
-        # Call parent implementation for other keys
+        # Call parent implementation for all keys (including paste shortcuts)
         super().keyPressEvent(event)
     
     def insertFromMimeData(self, source) -> None:
@@ -265,8 +261,18 @@ class TextEditorWidget(QTextEdit):
             # Get plain text and insert it without formatting
             text = source.text()
             if text:
+                # Get current cursor position
                 cursor = self.textCursor()
+                
+                # If there's a selection, remove it first
+                if cursor.hasSelection():
+                    cursor.removeSelectedText()
+                
+                # Insert plain text at cursor position
                 cursor.insertText(text)
+                
+                # Update the cursor position
+                self.setTextCursor(cursor)
         else:
             # If no text, call parent implementation
             super().insertFromMimeData(source)
