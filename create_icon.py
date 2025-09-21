@@ -284,7 +284,75 @@ class IconGenerator:
             print(f"✓ Created {output_file}")
         except (subprocess.CalledProcessError, FileNotFoundError):
             print(f"⚠ Could not create ICNS file (iconutil not found)")
-            print("  Falling back to PNG format")
+            print("  Attempting to create ICNS using Pillow...")
+            
+            # Try to create ICNS using Pillow
+            try:
+                from PIL import Image
+                
+                # Find the largest PNG file
+                png_files = [f for f in os.listdir(iconset_dir) if f.endswith('.png')]
+                if png_files:
+                    # Use the 512x512 version if available, otherwise the largest
+                    largest_png = None
+                    for png_file in png_files:
+                        if '512x512' in png_file:
+                            largest_png = png_file
+                            break
+                    
+                    if not largest_png:
+                        # Find the largest file by size
+                        largest_size = 0
+                        for png_file in png_files:
+                            file_path = os.path.join(iconset_dir, png_file)
+                            if os.path.getsize(file_path) > largest_size:
+                                largest_size = os.path.getsize(file_path)
+                                largest_png = png_file
+                    
+                    if largest_png:
+                        # Convert PNG to ICNS using Pillow
+                        png_path = os.path.join(iconset_dir, largest_png)
+                        img = Image.open(png_path)
+                        img.save(output_file, format='ICNS')
+                        print(f"✓ Created {output_file} from {largest_png} using Pillow")
+                    else:
+                        print("  No PNG files found in iconset")
+                else:
+                    print("  No PNG files found in iconset")
+            except ImportError:
+                print("  Pillow not available, creating simple ICNS from PNG...")
+                # Fallback: Create a simple ICNS by copying the largest PNG
+                try:
+                    png_files = [f for f in os.listdir(iconset_dir) if f.endswith('.png')]
+                    if png_files:
+                        # Use the 512x512 version if available, otherwise the largest
+                        largest_png = None
+                        for png_file in png_files:
+                            if '512x512' in png_file:
+                                largest_png = png_file
+                                break
+                        
+                        if not largest_png:
+                            # Find the largest file by size
+                            largest_size = 0
+                            for png_file in png_files:
+                                file_path = os.path.join(iconset_dir, png_file)
+                                if os.path.getsize(file_path) > largest_size:
+                                    largest_size = os.path.getsize(file_path)
+                                    largest_png = png_file
+                        
+                        if largest_png:
+                            # Copy the largest PNG as a simple ICNS
+                            shutil.copy2(os.path.join(iconset_dir, largest_png), output_file)
+                            print(f"✓ Created simple {output_file} from {largest_png}")
+                        else:
+                            print("  No PNG files found in iconset")
+                    else:
+                        print("  No PNG files found in iconset")
+                except Exception as e:
+                    print(f"  Error creating simple ICNS: {e}")
+            except Exception as e:
+                print(f"  Error creating ICNS with Pillow: {e}")
         finally:
             # Clean up temporary directory
             shutil.rmtree(iconset_dir, ignore_errors=True)

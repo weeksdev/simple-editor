@@ -22,18 +22,21 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install PyQt6 PyInstaller
+        pip install PyQt6 PyInstaller Pillow
         
     - name: Create app icon
       run: |
         python create_icon.py
-        ls -la *.icns *.png || echo "Icon files not found"
+        echo "Checking for icon files:"
+        ls -la *.icns *.png 2>/dev/null || echo "No icon files found"
+        echo "Available files:"
+        ls -la *.png 2>/dev/null || echo "No PNG files found"
         
     - name: Build macOS app
       run: |
-        # Check if icon files exist
+        # Check if icon files exist (prefer ICNS over PNG)
         if [ -f "icon.icns" ]; then
-          echo "Using icon.icns"
+          echo "Using icon.icns (preferred format)"
           ICON_ARG="--icon=icon.icns"
           ICON_DATA="--add-data icon.icns:."
         elif [ -f "icon.png" ]; then
@@ -118,11 +121,15 @@ jobs:
         </plist>
         EOF
         
-        # Copy icon if it exists
+        # Copy icon if it exists (prefer ICNS over PNG)
         if [ -f "icon.icns" ]; then
+            echo "Copying icon.icns to app bundle"
             cp "icon.icns" "Simple Editor.app/Contents/Resources/"
         elif [ -f "icon.png" ]; then
+            echo "Copying icon.png to app bundle"
             cp "icon.png" "Simple Editor.app/Contents/Resources/"
+        else
+            echo "No icon file found for app bundle"
         fi
         
     - name: Create DMG

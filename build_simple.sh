@@ -19,7 +19,7 @@ source build_env/bin/activate
 # Install dependencies
 echo "Installing dependencies..."
 pip install --upgrade pip
-pip install PyQt6
+pip install PyQt6 Pillow
 
 # Create icon
 echo "Creating app icon..."
