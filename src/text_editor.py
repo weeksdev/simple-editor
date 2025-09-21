@@ -236,9 +236,10 @@ class TextEditorWidget(QTextEdit):
         Args:
             event: Key press event from Qt framework
         """
-        # Handle paste with formatting stripped
+        # Handle paste with formatting stripped (both Ctrl+V and Cmd+V)
         if (event.key() == Qt.Key.Key_V and 
-            event.modifiers() & Qt.KeyboardModifier.ControlModifier):
+            (event.modifiers() & Qt.KeyboardModifier.ControlModifier or
+             event.modifiers() & Qt.KeyboardModifier.MetaModifier)):
             self.paste_plain_text()
             return
         
