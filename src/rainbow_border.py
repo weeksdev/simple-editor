@@ -271,10 +271,11 @@ class RainbowBorderWidget(QFrame):
             (position * 4 * math.pi) + (self.animation_offset * math.pi / 90)
         ) * self.WAVE_AMPLITUDE_SECONDARY
         
-        # Combine all effects
+        # Combine all effects and ensure valid range
         final_hue = (primary_hue + wave_effect + shimmer_effect) % 360
         
-        return final_hue
+        # Ensure hue is within valid range (0-359)
+        return max(0, min(359, final_hue))
     
     def _calculate_saturation(self, position: float) -> int:
         """
@@ -295,9 +296,9 @@ class RainbowBorderWidget(QFrame):
             )
         )
         
-        # Clamp to professional range
-        return max(self.COLOR_SATURATION_RANGE[0], 
-                  min(self.COLOR_SATURATION_RANGE[1], saturation))
+        # Clamp to professional range (0-255)
+        return max(0, min(255, max(self.COLOR_SATURATION_RANGE[0], 
+                  min(self.COLOR_SATURATION_RANGE[1], saturation))))
     
     def _calculate_value(self, position: float) -> int:
         """
@@ -318,6 +319,6 @@ class RainbowBorderWidget(QFrame):
             )
         )
         
-        # Clamp to professional range
-        return max(self.COLOR_VALUE_RANGE[0], 
-                  min(self.COLOR_VALUE_RANGE[1], value))
+        # Clamp to professional range (0-255)
+        return max(0, min(255, max(self.COLOR_VALUE_RANGE[0], 
+                  min(self.COLOR_VALUE_RANGE[1], value))))

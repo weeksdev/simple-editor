@@ -25,14 +25,31 @@ jobs:
         pip install PyQt6 PyInstaller
         
     - name: Create app icon
-      run: python create_icon.py
-      
+      run: |
+        python create_icon.py
+        ls -la *.icns *.png || echo "Icon files not found"
+        
     - name: Build macOS app
       run: |
-        # Use a simpler PyInstaller command that avoids Xcode issues
-        pyinstaller --onefile --windowed --name "Simple Editor" \
-          --icon=icon.icns \
-          --add-data "icon.icns:." \
+        # Check if icon files exist
+        if [ -f "icon.icns" ]; then
+          echo "Using icon.icns"
+          ICON_ARG="--icon=icon.icns"
+          ICON_DATA="--add-data icon.icns:."
+        elif [ -f "icon.png" ]; then
+          echo "Using icon.png as fallback"
+          ICON_ARG="--icon=icon.png"
+          ICON_DATA="--add-data icon.png:."
+        else
+          echo "No icon file found, building without icon"
+          ICON_ARG=""
+          ICON_DATA=""
+        fi
+        
+        # Use onedir mode instead of onefile to avoid macOS security issues
+        pyinstaller --onedir --windowed --name "Simple Editor" \
+          $ICON_ARG \
+          $ICON_DATA \
           --add-data "src:src" \
           --hidden-import PyQt6.QtCore \
           --hidden-import PyQt6.QtGui \
@@ -47,8 +64,11 @@ jobs:
         mkdir -p "Simple Editor.app/Contents/MacOS"
         mkdir -p "Simple Editor.app/Contents/Resources"
         
-        # Move the executable
-        mv "dist/Simple Editor" "Simple Editor.app/Contents/MacOS/"
+        # Copy the entire dist directory contents to MacOS
+        cp -r "dist/Simple Editor"/* "Simple Editor.app/Contents/MacOS/"
+        
+        # Make the main executable executable
+        chmod +x "Simple Editor.app/Contents/MacOS/Simple Editor"
         
         # Create Info.plist
         cat > "Simple Editor.app/Contents/Info.plist" << EOF
@@ -101,6 +121,8 @@ jobs:
         # Copy icon if it exists
         if [ -f "icon.icns" ]; then
             cp "icon.icns" "Simple Editor.app/Contents/Resources/"
+        elif [ -f "icon.png" ]; then
+            cp "icon.png" "Simple Editor.app/Contents/Resources/"
         fi
         
     - name: Create DMG
