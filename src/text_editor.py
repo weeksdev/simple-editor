@@ -250,6 +250,26 @@ class TextEditorWidget(QTextEdit):
         # Call parent implementation for other keys
         super().keyPressEvent(event)
     
+    def insertFromMimeData(self, source) -> None:
+        """
+        Override paste behavior to always strip formatting
+        
+        This method is called whenever content is pasted, ensuring that
+        all formatting is stripped regardless of the paste method used.
+        
+        Args:
+            source: MIME data source containing the pasted content
+        """
+        if source.hasText():
+            # Get plain text and insert it without formatting
+            text = source.text()
+            if text:
+                cursor = self.textCursor()
+                cursor.insertText(text)
+        else:
+            # If no text, call parent implementation
+            super().insertFromMimeData(source)
+    
     def mousePressEvent(self, event) -> None:
         """
         Handle mouse press events
