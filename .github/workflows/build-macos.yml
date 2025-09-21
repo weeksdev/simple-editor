@@ -2,6 +2,8 @@ name: Build macOS DMG
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -32,9 +34,17 @@ jobs:
         
     - name: Rename DMG for release
       run: |
-        # Rename the DMG to include the version number
+        # Determine version and rename DMG
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          # For tags, use the tag name
+          VERSION="${{ github.ref_name }}"
+        else
+          # For main branch, use "latest"
+          VERSION="latest"
+        fi
+        
         if [ -f "Simple Editor-1.0.0.dmg" ]; then
-          mv "Simple Editor-1.0.0.dmg" "Simple Editor-${GITHUB_REF_NAME}.dmg"
+          mv "Simple Editor-1.0.0.dmg" "Simple Editor-${VERSION}.dmg"
         fi
         
     - name: Upload DMG artifact
@@ -44,11 +54,12 @@ jobs:
         path: Simple Editor-*.dmg
         
     - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
+      if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
         files: Simple Editor-*.dmg
         name: Simple Editor ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name }}
         body: |
           ## Simple Editor ${{ github.ref_name }}
           
@@ -70,7 +81,15 @@ jobs:
           ### System Requirements
           - macOS 10.15 or later
           - No additional dependencies required
+          
+          ### Note
+          If you see a security warning when first opening the app:
+          1. Right-click on "Simple Editor" in Applications
+          2. Select "Open"
+          3. Click "Open" in the security dialog
+          4. The app will then open normally
         draft: false
-        prerelease: false
+        prerelease: ${{ github.ref != 'refs/heads/main' }}
+        overwrite: ${{ github.ref == 'refs/heads/main' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

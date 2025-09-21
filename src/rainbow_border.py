@@ -61,6 +61,7 @@ class RainbowBorderWidget(QFrame):
         self.wave_offset = 0
         self.border_width = self.DEFAULT_BORDER_WIDTH
         self.animation_speed = self.DEFAULT_ANIMATION_SPEED
+        self.border_visible = True  # Whether the border should be drawn
         
         # Setup animation timer for smooth updates
         self._setup_animation_timer()
@@ -151,6 +152,25 @@ class RainbowBorderWidget(QFrame):
         """Stop the animation timer"""
         self.animation_timer.stop()
     
+    def set_border_visible(self, visible: bool) -> None:
+        """
+        Set the border visibility
+        
+        Args:
+            visible: True to show the border, False to hide it
+        """
+        self.border_visible = visible
+        self.update()  # Trigger a repaint
+    
+    def is_border_visible(self) -> bool:
+        """
+        Check if the border is currently visible
+        
+        Returns:
+            True if the border is visible, False otherwise
+        """
+        return self.border_visible
+    
     def paintEvent(self, event) -> None:
         """
         Paint the rainbow border with enterprise-level rendering
@@ -167,8 +187,9 @@ class RainbowBorderWidget(QFrame):
         # Get widget dimensions
         rect = self.rect()
         
-        # Render the gradient border
-        self._draw_gradient_border(painter, rect)
+        # Render the gradient border only if visible
+        if self.border_visible:
+            self._draw_gradient_border(painter, rect)
     
     def _draw_gradient_border(self, painter: QPainter, rect) -> None:
         """

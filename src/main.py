@@ -461,11 +461,11 @@ class SimpleEditorApplication(QMainWindow):
         Shows or hides the animated rainbow border based on current state.
         """
         if self.toggle_border_action.isChecked():
-            self.rainbow_border.show()
+            self.rainbow_border.set_border_visible(True)
             self.rainbow_border.start_animation()
             self.status_bar.showMessage("Rainbow border enabled")
         else:
-            self.rainbow_border.hide()
+            self.rainbow_border.set_border_visible(False)
             self.rainbow_border.stop_animation()
             self.status_bar.showMessage("Rainbow border disabled")
     
