@@ -24,132 +24,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install PyQt6 PyInstaller Pillow
         
-    - name: Create app icon
-      run: |
-        python create_icon.py
-        echo "Checking for icon files:"
-        ls -la *.icns *.png 2>/dev/null || echo "No icon files found"
-        echo "Available files:"
-        ls -la *.png 2>/dev/null || echo "No PNG files found"
-        
     - name: Build macOS app
       run: |
-        # Check if icon files exist (prefer ICNS over PNG)
-        if [ -f "icon.icns" ]; then
-          echo "Using icon.icns (preferred format)"
-          ICON_ARG="--icon=icon.icns"
-          ICON_DATA="--add-data icon.icns:."
-        elif [ -f "icon.png" ]; then
-          echo "Using icon.png as fallback"
-          ICON_ARG="--icon=icon.png"
-          ICON_DATA="--add-data icon.png:."
-        else
-          echo "No icon file found, building without icon"
-          ICON_ARG=""
-          ICON_DATA=""
-        fi
+        # Use the simple build script
+        chmod +x build_simple_macos.sh
+        ./build_simple_macos.sh
         
-        # Use onedir mode instead of onefile to avoid macOS security issues
-        pyinstaller --onedir --windowed --name "Simple Editor" \
-          $ICON_ARG \
-          $ICON_DATA \
-          --add-data "src:src" \
-          --hidden-import PyQt6.QtCore \
-          --hidden-import PyQt6.QtGui \
-          --hidden-import PyQt6.QtWidgets \
-          --hidden-import PyQt6.sip \
-          --osx-bundle-identifier com.simpleeditor.app \
-          simple_editor_enterprise.py
-        
-    - name: Create app bundle manually
+    - name: Rename DMG for release
       run: |
-        # Create proper app bundle structure
-        mkdir -p "Simple Editor.app/Contents/MacOS"
-        mkdir -p "Simple Editor.app/Contents/Resources"
-        
-        # Copy the entire dist directory contents to MacOS
-        cp -r "dist/Simple Editor"/* "Simple Editor.app/Contents/MacOS/"
-        
-        # Make the main executable executable
-        chmod +x "Simple Editor.app/Contents/MacOS/Simple Editor"
-        
-        # Create Info.plist
-        cat > "Simple Editor.app/Contents/Info.plist" << EOF
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>CFBundleExecutable</key>
-            <string>Simple Editor</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.simpleeditor.app</string>
-            <key>CFBundleName</key>
-            <string>Simple Editor</string>
-            <key>CFBundleVersion</key>
-            <string>1.0.0</string>
-            <key>CFBundleShortVersionString</key>
-            <string>1.0.0</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>CFBundleSignature</key>
-            <string>????</string>
-            <key>LSMinimumSystemVersion</key>
-            <string>10.15.0</string>
-            <key>NSHighResolutionCapable</key>
-            <true/>
-            <key>NSRequiresAquaSystemAppearance</key>
-            <false/>
-            <key>CFBundleDocumentTypes</key>
-            <array>
-                <dict>
-                    <key>CFBundleTypeName</key>
-                    <string>Text Document</string>
-                    <key>CFBundleTypeRole</key>
-                    <string>Editor</string>
-                    <key>LSItemContentTypes</key>
-                    <array>
-                        <string>public.text</string>
-                        <string>public.plain-text</string>
-                    </array>
-                    <key>CFBundleTypeExtensions</key>
-                    <array>
-                        <string>txt</string>
-                    </array>
-                </dict>
-            </array>
-        </dict>
-        </plist>
-        EOF
-        
-        # Copy icon if it exists (prefer ICNS over PNG)
-        if [ -f "icon.icns" ]; then
-            echo "Copying icon.icns to app bundle"
-            cp "icon.icns" "Simple Editor.app/Contents/Resources/"
-        elif [ -f "icon.png" ]; then
-            echo "Copying icon.png to app bundle"
-            cp "icon.png" "Simple Editor.app/Contents/Resources/"
-        else
-            echo "No icon file found for app bundle"
+        # Rename the DMG to include the version number
+        if [ -f "Simple Editor-1.0.0.dmg" ]; then
+          mv "Simple Editor-1.0.0.dmg" "Simple Editor-${GITHUB_REF_NAME}.dmg"
         fi
-        
-    - name: Create DMG
-      run: |
-        # Create DMG directory structure
-        DMG_DIR="Simple Editor DMG"
-        mkdir -p "$DMG_DIR"
-        
-        # Copy app to DMG directory
-        cp -R "Simple Editor.app" "$DMG_DIR/"
-        
-        # Create Applications symlink
-        ln -s /Applications "$DMG_DIR/Applications"
-        
-        # Create DMG
-        DMG_NAME="Simple Editor-${GITHUB_REF_NAME}.dmg"
-        hdiutil create -volname "Simple Editor" -srcfolder "$DMG_DIR" -ov -format UDZO "$DMG_NAME"
-        
-        # Clean up
-        rm -rf "$DMG_DIR"
         
     - name: Upload DMG artifact
       uses: actions/upload-artifact@v4
