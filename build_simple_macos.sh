@@ -1,70 +1,58 @@
 #!/bin/bash
-# Simple build script for Simple Editor (no Xcode required)
+# Simple macOS build script for Simple Editor
+# This is much simpler and more reliable than the complex approach
 
 set -e
 
-echo "Building Simple Editor (simple method)..."
+echo "Building Simple Editor for macOS (simple approach)..."
 
-# Check if we're on macOS
-if [[ "$OSTYPE" != "darwin"* ]]; then
-    echo "Error: This script must be run on macOS"
-    exit 1
-fi
+# Clean previous builds
+rm -rf dist build "Simple Editor.app" "Simple Editor-*.dmg"
 
 # Create virtual environment
-echo "Creating virtual environment..."
+echo "Setting up build environment..."
 python3 -m venv build_env
 source build_env/bin/activate
 
 # Install dependencies
 echo "Installing dependencies..."
 pip install --upgrade pip
-pip install PyQt6 Pillow PyInstaller
+pip install PyQt6 PyInstaller Pillow
 
 # Create icon
 echo "Creating app icon..."
 python create_icon.py
 
-# Build the app using PyInstaller
-echo "Building macOS app with PyInstaller..."
-pyinstaller --onedir --windowed --name "Simple Editor" \
+# Build with PyInstaller using onefile mode (simpler)
+echo "Building macOS app..."
+pyinstaller --onefile --windowed \
+  --name "Simple Editor" \
   --icon=icon.icns \
-  --add-data "icon.icns:." \
+  --osx-bundle-identifier com.simpleeditor.app \
   --add-data "src:src" \
   --hidden-import PyQt6.QtCore \
   --hidden-import PyQt6.QtGui \
   --hidden-import PyQt6.QtWidgets \
   --hidden-import PyQt6.sip \
-  --osx-bundle-identifier com.simpleeditor.app \
   simple_editor_enterprise.py
 
-# Create proper app bundle from PyInstaller output
-echo "Creating proper app bundle..."
+# Create proper .app bundle
+echo "Creating app bundle..."
 APP_NAME="Simple Editor.app"
-rm -rf "$APP_NAME"
-
-# Create app bundle structure
 mkdir -p "$APP_NAME/Contents/MacOS"
 mkdir -p "$APP_NAME/Contents/Resources"
-mkdir -p "$APP_NAME/Contents/Frameworks"
 
-# Copy the main executable
-cp "dist/Simple Editor/Simple Editor" "$APP_NAME/Contents/MacOS/"
+# Copy the executable
+cp "dist/Simple Editor" "$APP_NAME/Contents/MacOS/Simple Editor"
 chmod +x "$APP_NAME/Contents/MacOS/Simple Editor"
 
-# Copy Python shared library to Frameworks
-if [ -f "dist/Simple Editor/_internal/libpython3.12.dylib" ]; then
-    cp "dist/Simple Editor/_internal/libpython3.12.dylib" "$APP_NAME/Contents/Frameworks/"
+# Copy icon
+if [ -f "icon.icns" ]; then
+    cp "icon.icns" "$APP_NAME/Contents/Resources/"
 fi
 
-# Copy all Python modules and libraries to Frameworks
-cp -r "dist/Simple Editor/_internal"/* "$APP_NAME/Contents/Frameworks/"
-
-# Create a symlink from MacOS to Frameworks for PyInstaller compatibility
-ln -sf "../Frameworks" "$APP_NAME/Contents/MacOS/_internal"
-
 # Create Info.plist
-cat > "$APP_NAME/Contents/Info.plist" << EOF
+cat > "$APP_NAME/Contents/Info.plist" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -111,41 +99,21 @@ cat > "$APP_NAME/Contents/Info.plist" << EOF
 </plist>
 EOF
 
-# Copy icon if it exists
-if [ -f "icon.icns" ]; then
-    cp "icon.icns" "$APP_NAME/Contents/Resources/"
-fi
-
-# Copy Python files to Resources
-cp simple_editor_enterprise.py "$APP_NAME/Contents/Resources/"
-cp -r src "$APP_NAME/Contents/Resources/"
-
 # Create DMG
 echo "Creating DMG installer..."
-
-# Create DMG directory structure
 DMG_DIR="Simple Editor DMG"
-rm -rf "$DMG_DIR"
 mkdir -p "$DMG_DIR"
-
-# Copy app to DMG directory
 cp -R "$APP_NAME" "$DMG_DIR/"
-
-# Create Applications symlink
 ln -s /Applications "$DMG_DIR/Applications"
 
-# Create DMG
 DMG_NAME="Simple Editor-1.0.0.dmg"
-rm -f "$DMG_NAME"
-
 hdiutil create -volname "Simple Editor" -srcfolder "$DMG_DIR" -ov -format UDZO "$DMG_NAME"
 
 # Clean up
 rm -rf "$DMG_DIR"
-rm -rf build_env
 
-echo "✓ DMG created: $DMG_NAME"
 echo "✓ Build complete!"
+echo "✓ DMG created: $DMG_NAME"
 echo ""
 echo "To install:"
 echo "1. Open the DMG file"
