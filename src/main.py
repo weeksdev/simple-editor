@@ -14,6 +14,7 @@ Features:
 
 import sys
 import os
+import shutil
 from typing import Optional
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QMenuBar, QMenu, QVBoxLayout, 
@@ -382,32 +383,155 @@ class SimpleEditorApplication(QMainWindow):
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Could not open file:\n{str(e)}")
     
-    def save_file(self) -> None:
+    def save_file(self) -> bool:
         """
-        Save the current file
+        Save the current file with comprehensive error handling
         
         Saves to current file if available, otherwise prompts for save as.
+        
+        Returns:
+            True if save was successful, False if failed or cancelled
         """
         if self.current_file:
+            return self._perform_save(self.current_file)
+        else:
+            return self.save_as_file()
+    
+    def _perform_save(self, file_path: str) -> bool:
+        """
+        Perform the actual save operation with robust error handling
+        
+        Args:
+            file_path: Path where to save the file
+            
+        Returns:
+            True if save was successful, False if failed
+        """
+        try:
+            # Validate file path
+            if not file_path or not isinstance(file_path, str):
+                raise ValueError("Invalid file path")
+            
+            # Check if directory exists and is writable
+            directory = os.path.dirname(file_path)
+            if directory and not os.path.exists(directory):
+                raise FileNotFoundError(f"Directory does not exist: {directory}")
+            
+            if directory and not os.access(directory, os.W_OK):
+                raise PermissionError(f"No write permission for directory: {directory}")
+            
+            # Get content safely
             try:
                 content = self.text_editor.get_plain_text()
-                with open(self.current_file, 'w', encoding='utf-8') as file:
+                if content is None:
+                    content = ""
+            except Exception as e:
+                raise RuntimeError(f"Failed to get text content: {str(e)}")
+            
+            # Create backup if file exists
+            backup_path = None
+            if os.path.exists(file_path):
+                try:
+                    backup_path = f"{file_path}.backup"
+                    shutil.copy2(file_path, backup_path)
+                except Exception:
+                    # Backup creation failed, but continue with save
+                    pass
+            
+            # Perform atomic save
+            temp_path = f"{file_path}.tmp"
+            try:
+                with open(temp_path, 'w', encoding='utf-8', newline='') as file:
                     file.write(content)
                 
+                # Atomic move
+                if os.name == 'nt':  # Windows
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    os.rename(temp_path, file_path)
+                else:  # Unix-like
+                    os.rename(temp_path, file_path)
+                
+                # Remove backup if save was successful
+                if backup_path and os.path.exists(backup_path):
+                    try:
+                        os.remove(backup_path)
+                    except Exception:
+                        pass
+                
+                # Update state
                 self.is_modified = False
                 self._update_title()
-                self.status_bar.showMessage(f"Saved {os.path.basename(self.current_file)}")
+                self.status_bar.showMessage(f"Saved {os.path.basename(file_path)}")
+                return True
                 
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not save file:\n{str(e)}")
-        else:
-            self.save_as_file()
+                # Restore backup if save failed
+                if backup_path and os.path.exists(backup_path):
+                    try:
+                        shutil.copy2(backup_path, file_path)
+                        os.remove(backup_path)
+                    except Exception:
+                        pass
+                
+                # Clean up temp file
+                if os.path.exists(temp_path):
+                    try:
+                        os.remove(temp_path)
+                    except Exception:
+                        pass
+                
+                raise e
+                
+        except PermissionError as e:
+            QMessageBox.critical(
+                self, "Permission Denied", 
+                f"Cannot save file: Permission denied\n\n{str(e)}\n\n"
+                f"Please check:\n"
+                f"• File is not read-only\n"
+                f"• You have write permissions\n"
+                f"• File is not open in another application"
+            )
+            return False
+            
+        except FileNotFoundError as e:
+            QMessageBox.critical(
+                self, "Directory Not Found", 
+                f"Cannot save file: Directory not found\n\n{str(e)}\n\n"
+                f"Please select a different location."
+            )
+            return False
+            
+        except OSError as e:
+            QMessageBox.critical(
+                self, "System Error", 
+                f"Cannot save file: System error\n\n{str(e)}\n\n"
+                f"Please try:\n"
+                f"• Saving to a different location\n"
+                f"• Checking available disk space\n"
+                f"• Restarting the application"
+            )
+            return False
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Save Error", 
+                f"An unexpected error occurred while saving:\n\n{str(e)}\n\n"
+                f"Please try:\n"
+                f"• Saving to a different location\n"
+                f"• Restarting the application\n"
+                f"• Contact support if the problem persists"
+            )
+            return False
     
-    def save_as_file(self) -> None:
+    def save_as_file(self) -> bool:
         """
         Save the current file with a new name
         
         Opens a file dialog to select a new location and filename.
+        
+        Returns:
+            True if save was successful, False if failed or cancelled
         """
         file_path, _ = QFileDialog.getSaveFileName(
             self, "Save As", "",
@@ -415,18 +539,13 @@ class SimpleEditorApplication(QMainWindow):
         )
         
         if file_path:
-            try:
-                content = self.text_editor.get_plain_text()
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(content)
-                
+            success = self._perform_save(file_path)
+            if success:
                 self.current_file = file_path
-                self.is_modified = False
-                self._update_title()
                 self.status_bar.showMessage(f"Saved as {os.path.basename(file_path)}")
-                
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not save file:\n{str(e)}")
+            return success
+        else:
+            return False
     
     def _check_save(self) -> bool:
         """
@@ -445,8 +564,8 @@ class SimpleEditorApplication(QMainWindow):
             )
             
             if reply == QMessageBox.StandardButton.Yes:
-                self.save_file()
-                return True
+                success = self.save_file()
+                return success  # Only proceed if save was successful
             elif reply == QMessageBox.StandardButton.No:
                 return True
             else:
