@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
-Enterprise-level app icon generator for Simple Editor
-Creates a professional, high-quality icon with rainbow border and text editor theme
+App icon processor for Simple Editor
+Uses the provided simpleeditor.png file to create app icons in various formats
 """
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import (QPainter, QPen, QBrush, QColor, QFont, QPixmap, 
-                         QLinearGradient, QRadialGradient, QFontMetrics)
-from PyQt6.QtCore import Qt, QRect, QPoint
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import Qt
 import sys
-import math
 import subprocess
 import os
 import shutil

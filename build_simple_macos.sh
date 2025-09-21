@@ -21,7 +21,7 @@ pip install PyQt6 PyInstaller Pillow
 
 # Create icon
 echo "Creating app icon..."
-python create_icon.py
+python create_icon_optimized.py
 
 # Build with PyInstaller using onefile mode (simpler)
 echo "Building macOS app..."
