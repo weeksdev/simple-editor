@@ -19,9 +19,13 @@ echo "Installing dependencies..."
 pip install --upgrade pip
 pip install PyQt6 PyInstaller Pillow
 
-# Create icon
-echo "Creating app icon..."
-python create_icon_optimized.py
+# Create icon (if not already created)
+if [ ! -f "icon.icns" ]; then
+    echo "Creating app icon..."
+    python create_icon_optimized.py
+else
+    echo "Using existing icon.icns"
+fi
 
 # Build with PyInstaller using onefile mode (simpler)
 echo "Building macOS app..."

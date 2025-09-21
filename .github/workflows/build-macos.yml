@@ -27,9 +27,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install PyQt6 PyInstaller Pillow
         
+    - name: Create app icon
+      run: |
+        echo "Checking for simpleeditor.png:"
+        ls -la simpleeditor.png || echo "simpleeditor.png not found"
+        echo "Creating app icon..."
+        python create_icon_optimized.py
+        echo "Checking for created icon files:"
+        ls -la *.icns *.png 2>/dev/null || echo "No icon files found"
+        echo "Checking iconset directory:"
+        ls -la "Simple Editor.iconset/" 2>/dev/null || echo "No iconset directory found"
+        
     - name: Build macOS app
       run: |
-        # Use the simple build script
+        echo "Checking for icon before build:"
+        ls -la icon.icns || echo "icon.icns not found before build"
+        echo "Using the simple build script..."
         chmod +x build_simple_macos.sh
         ./build_simple_macos.sh
         

@@ -74,6 +74,7 @@ $RECYCLE.BIN/
 *.icns
 *.ico
 *.png
+!simpleeditor.png
 Simple Editor.iconset/
 build/
 dist/
