@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simple-editor"
+version = "1.0.0"
+description = "A simple, fast text editor similar to Windows Notepad"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Simple Editor Team"}
+]
+keywords = ["text editor", "notepad", "simple", "fast", "cross-platform"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Editors",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/simple-editor"
+Repository = "https://github.com/yourusername/simple-editor"
+Issues = "https://github.com/yourusername/simple-editor/issues"
+
+[project.scripts]
+simple-editor = "simple_editor_qt:main"
+simple-editor-gui = "simple_editor_qt:main"
+
+[tool.setuptools]
+py-modules = ["simple_editor"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["simple_editor*"]
