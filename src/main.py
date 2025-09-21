@@ -17,8 +17,9 @@ import os
 from typing import Optional
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QMenuBar, QMenu, QVBoxLayout, 
-    QWidget, QStatusBar, QFileDialog, QMessageBox, QAction
+    QWidget, QStatusBar, QFileDialog, QMessageBox
 )
+from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QKeySequence, QFont
 

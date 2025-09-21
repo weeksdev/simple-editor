@@ -6,14 +6,26 @@ Built with enterprise architecture principles, featuring modular design, compreh
 
 ## Features
 
+### Core Functionality
 - **Fast and lightweight** - Built with PyQt6 for optimal performance
 - **Cross-platform** - Works on macOS, Ubuntu, and Windows
 - **Plain text only** - Strips all formatting when pasting (like Windows Notepad)
-- **Simple interface** - Clean, minimal design focused on text editing
+- **Professional interface** - Clean, enterprise-level design focused on text editing
+
+### Advanced Features
 - **Standard shortcuts** - Cmd/Ctrl+N, O, S, V, etc.
 - **Zoom support** - Zoom in/out with Cmd/Ctrl+Plus/Minus
 - **Auto-save detection** - Prompts to save unsaved changes
 - **Subtle rainbow border** - Gentle animated smooth gradient rainbow border with flowing colors (toggleable with Ctrl+R)
+- **Font management** - Professional typography with font selection
+- **Animation controls** - Adjustable rainbow border speed and effects
+
+### Enterprise Architecture
+- **Modular design** - Clean separation of concerns with professional abstractions
+- **Comprehensive documentation** - Detailed docstrings and type hints
+- **Error handling** - Robust error handling with user-friendly messages
+- **Memory efficient** - Optimized rendering and resource management
+- **Extensible** - Plugin-ready architecture for future enhancements
 
 ## Installation
 
@@ -52,6 +64,28 @@ See [BUILD.md](BUILD.md) for detailed build instructions.
 **Quick build:**
 ```bash
 ./build_simple.sh
+```
+
+## Architecture
+
+Simple Editor is built with enterprise-level architecture principles:
+
+- **Modular Design**: Clean separation of concerns with professional abstractions
+- **Type Safety**: Comprehensive type hints and validation
+- **Documentation**: Detailed docstrings following Google style
+- **Error Handling**: Robust error handling with graceful degradation
+- **Performance**: Memory-efficient rendering and resource management
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation.
+
+### Code Organization
+
+```
+src/
+├── main.py                  # Main application and window management
+├── rainbow_border.py        # Animated rainbow border widget
+├── text_editor.py           # Advanced text editing widget
+└── __init__.py             # Package initialization
 ```
 
 ## Usage

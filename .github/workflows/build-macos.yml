@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         
@@ -123,14 +123,14 @@ jobs:
         rm -rf "$DMG_DIR"
         
     - name: Upload DMG artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Simple-Editor-macOS-${{ github.ref_name }}
         path: Simple Editor-*.dmg
         
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: Simple Editor-*.dmg
         name: Simple Editor ${{ github.ref_name }}
